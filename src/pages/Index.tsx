@@ -117,7 +117,27 @@ const Index = () => {
             <a href="#contacts" className="text-foreground hover:text-primary transition-colors font-medium">Контакты</a>
           </nav>
 
-          <Sheet>
+          <div className="flex items-center gap-2">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="md:hidden">
+                  <Icon name="Menu" size={20} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[280px]">
+                <SheetHeader>
+                  <SheetTitle>Меню</SheetTitle>
+                </SheetHeader>
+                <nav className="flex flex-col gap-4 mt-8">
+                  <a href="#menu" className="text-lg font-medium hover:text-primary transition-colors">Меню</a>
+                  <a href="#delivery" className="text-lg font-medium hover:text-primary transition-colors">Доставка</a>
+                  <a href="#about" className="text-lg font-medium hover:text-primary transition-colors">О нас</a>
+                  <a href="#contacts" className="text-lg font-medium hover:text-primary transition-colors">Контакты</a>
+                </nav>
+              </SheetContent>
+            </Sheet>
+
+            <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="relative">
                 <Icon name="ShoppingCart" size={20} />
@@ -301,6 +321,7 @@ const Index = () => {
               </div>
             </SheetContent>
           </Sheet>
+          </div>
         </div>
       </header>
 
