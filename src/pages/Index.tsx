@@ -3,6 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
 interface MenuItem {
@@ -21,6 +26,16 @@ interface CartItem extends MenuItem {
 const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState('Все');
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [orderForm, setOrderForm] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    apartment: '',
+    comment: '',
+    paymentMethod: 'card'
+  });
+  const { toast } = useToast();
 
   const menuItems: MenuItem[] = [
     { id: 1, name: 'Классический бургер', description: 'Сочная говяжья котлета, свежие овощи', price: 450, category: 'Бургеры', image: 'https://cdn.poehali.dev/projects/40523410-3074-410e-ada5-0d924f5666f5/files/1dd07cbe-185c-43e7-8b72-9940fa6ce6f3.jpg' },
@@ -63,6 +78,26 @@ const Index = () => {
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const deliveryFee = totalPrice > 1000 ? 0 : 200;
+  const finalTotal = totalPrice + deliveryFee;
+
+  const handleOrderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Заказ оформлен! 🎉",
+      description: `Ваш заказ на ${finalTotal} ₽ принят. Ожидайте доставку в течение 30 минут.`,
+    });
+    setCart([]);
+    setIsCheckoutOpen(false);
+    setOrderForm({
+      name: '',
+      phone: '',
+      address: '',
+      apartment: '',
+      comment: '',
+      paymentMethod: 'card'
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -123,14 +158,143 @@ const Index = () => {
                         </Button>
                       </div>
                     ))}
-                    <div className="border-t pt-4 mt-4">
-                      <div className="flex justify-between text-lg font-bold mb-4">
-                        <span>Итого:</span>
+                    <div className="border-t pt-4 mt-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span>Товары:</span>
                         <span>{totalPrice} ₽</span>
                       </div>
-                      <Button className="w-full" size="lg">
-                        Оформить заказ
-                      </Button>
+                      <div className="flex justify-between text-sm">
+                        <span>Доставка:</span>
+                        <span>{deliveryFee === 0 ? 'Бесплатно' : `${deliveryFee} ₽`}</span>
+                      </div>
+                      {totalPrice < 1000 && (
+                        <p className="text-xs text-muted-foreground">Бесплатная доставка от 1000 ₽</p>
+                      )}
+                      <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                        <span>Итого:</span>
+                        <span>{finalTotal} ₽</span>
+                      </div>
+                      <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
+                        <DialogTrigger asChild>
+                          <Button className="w-full" size="lg">
+                            Оформить заказ
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Оформление заказа</DialogTitle>
+                          </DialogHeader>
+                          <form onSubmit={handleOrderSubmit} className="space-y-6">
+                            <div className="space-y-4">
+                              <h3 className="font-semibold text-lg">Контактные данные</h3>
+                              <div className="grid gap-4">
+                                <div>
+                                  <Label htmlFor="name">Имя *</Label>
+                                  <Input
+                                    id="name"
+                                    required
+                                    value={orderForm.name}
+                                    onChange={(e) => setOrderForm({...orderForm, name: e.target.value})}
+                                    placeholder="Ваше имя"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="phone">Телефон *</Label>
+                                  <Input
+                                    id="phone"
+                                    type="tel"
+                                    required
+                                    value={orderForm.phone}
+                                    onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
+                                    placeholder="+7 (999) 123-45-67"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              <h3 className="font-semibold text-lg">Адрес доставки</h3>
+                              <div className="grid gap-4">
+                                <div>
+                                  <Label htmlFor="address">Улица и дом *</Label>
+                                  <Input
+                                    id="address"
+                                    required
+                                    value={orderForm.address}
+                                    onChange={(e) => setOrderForm({...orderForm, address: e.target.value})}
+                                    placeholder="ул. Примерная, д. 1"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="apartment">Квартира</Label>
+                                  <Input
+                                    id="apartment"
+                                    value={orderForm.apartment}
+                                    onChange={(e) => setOrderForm({...orderForm, apartment: e.target.value})}
+                                    placeholder="Кв. 10, подъезд 2, этаж 3"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="comment">Комментарий к заказу</Label>
+                                  <Input
+                                    id="comment"
+                                    value={orderForm.comment}
+                                    onChange={(e) => setOrderForm({...orderForm, comment: e.target.value})}
+                                    placeholder="Позвоните за 5 минут"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              <h3 className="font-semibold text-lg">Способ оплаты</h3>
+                              <RadioGroup
+                                value={orderForm.paymentMethod}
+                                onValueChange={(value) => setOrderForm({...orderForm, paymentMethod: value})}
+                              >
+                                <div className="flex items-center space-x-2 border rounded-lg p-4">
+                                  <RadioGroupItem value="card" id="card" />
+                                  <Label htmlFor="card" className="flex-1 cursor-pointer">
+                                    <div className="flex items-center gap-2">
+                                      <Icon name="CreditCard" size={20} className="text-primary" />
+                                      <span className="font-medium">Банковская карта</span>
+                                    </div>
+                                  </Label>
+                                </div>
+                                <div className="flex items-center space-x-2 border rounded-lg p-4">
+                                  <RadioGroupItem value="cash" id="cash" />
+                                  <Label htmlFor="cash" className="flex-1 cursor-pointer">
+                                    <div className="flex items-center gap-2">
+                                      <Icon name="Wallet" size={20} className="text-primary" />
+                                      <span className="font-medium">Наличными курьеру</span>
+                                    </div>
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            </div>
+
+                            <div className="border-t pt-4">
+                              <div className="space-y-2 mb-4">
+                                <div className="flex justify-between">
+                                  <span>Товары:</span>
+                                  <span>{totalPrice} ₽</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Доставка:</span>
+                                  <span>{deliveryFee === 0 ? 'Бесплатно' : `${deliveryFee} ₽`}</span>
+                                </div>
+                                <div className="flex justify-between text-xl font-bold">
+                                  <span>К оплате:</span>
+                                  <span>{finalTotal} ₽</span>
+                                </div>
+                              </div>
+                              <Button type="submit" className="w-full" size="lg">
+                                Подтвердить заказ
+                              </Button>
+                            </div>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </>
                 )}
